@@ -1,2 +1,5 @@
 venv/
+data/
+lib/__pycache__/
+
 
