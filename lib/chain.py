@@ -11,7 +11,7 @@ from lib.models import MODELS_MAP
 from lib.utils import format_docs, retrieve_answer, load_embeddings
 from lib.entities import LLMEvalResult
 
-def create_retriever(llm_name, db_path, docs, collection_name="local-rag"):
+def create_retriever(llm_name, db_path, docs, embeddings, collection_name="local-rag"):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=60)
 
 

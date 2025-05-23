@@ -1,4 +1,7 @@
 from lib.models import MODELS_MAP
+from langchain_ollama.llms import OllamaLLM
+from langchain_ollama import OllamaEmbeddings
+
 
 def read_prompt(file_name):
     with open(file_name, 'r') as file:
@@ -11,12 +14,17 @@ def retrieve_answer(output):
     return output.content
 
 def load_LLM(llm_name):
-    # need to return ollama ref here
-    return True;
+    model_info = MODELS_MAP[llm_name]["name"]
+    llm = OllamaLLM(model=model_info)
+    return llm;
 
 def load_embeddings(llm_name):
-    # need to return ollama ref here
-    return True;
+    embedding_info = MODELS_MAP[llm_name]["embedding_name"]
+    print(f"Embeddings selected: ", embedding_info)
+    embeddings = OllamaEmbeddings(
+        model="llama3",
+    )
+    return embeddings;
 
 def get_available_models():
     # need to return ollama.list() here
@@ -25,8 +33,6 @@ def get_available_models():
 def select_model():
     models = get_available_models()
     print("Available Models:", models)
-    #for item in models:
-    #    print(item)
     for i, model in enumerate(models):
         print(f"{i+1}, {model}")
     
