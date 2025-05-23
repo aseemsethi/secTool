@@ -63,9 +63,9 @@ def main():
         "evaluation_prompt": read_prompt(os.path.join(prompt_templates_dir, 'evaluation_prompt.txt')),
         "evaluation_with_context_prompt": read_prompt(os.path.join(prompt_templates_dir, 'evaluation_with_context_prompt.txt'))
     }
-    print(f"\nInitial Prompt Loaded: {prompts_text["initial_prompt"]}")
-    print(f"Eval Prompt Loaded: {prompts_text["evaluation_prompt"]}")
-    print(f"Eval Prompt w/Context Loaded: {prompts_text["evaluation_with_context_prompt"]}")
+    #print(f"\nInitial Prompt Loaded: {prompts_text["initial_prompt"]}")
+    #print(f"Eval Prompt Loaded: {prompts_text["evaluation_prompt"]}")
+    #print(f"Eval Prompt w/Context Loaded: {prompts_text["evaluation_with_context_prompt"]}")
 
 if __name__ == "__main__":
     main()
