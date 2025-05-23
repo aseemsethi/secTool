@@ -13,8 +13,10 @@ chromadb
 langchain-chroma
 langchain-text-splitters
 esprima
-#tree_sitter 
-#tree_sitter_languages
+tree_sitter 
+tree_sitter_python
+tree_sitter_go
+tree_sitter_languages
 #pysqlite3-binary
 pydantic
 

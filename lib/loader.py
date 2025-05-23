@@ -7,9 +7,9 @@ def load_files(repository_path):
     loader = GenericLoader.from_filesystem(
         repository_path,
         glob="**/*",
-        suffixes=[".py"],
+        suffixes=[".go"],
         parser=LanguageParser(
-            language=Language.PYTHON
+            language=Language.GO
         )
     )
     docs = loader.load()

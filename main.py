@@ -52,6 +52,11 @@ def main():
     print(f"Downloading repo from {args.repo_url}")
     download_github_repo(args.repo_url, repo_dir)
 
+    # Load Docs into Loader
+    print(f"Loading Docs into GenericLoader")
+    document_chunks = load_files(repository_path=repo_dir)
+    print(f"Created chunks len is: {len(document_chunks)}")
+
     # Load prompt templates
     prompts_text = {
         "initial_prompt": read_prompt(os.path.join(prompt_templates_dir, 'initial_prompt.txt')),
