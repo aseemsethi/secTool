@@ -1,5 +1,6 @@
 #
 # Learnings from BellaBe github code
+# Using python 3.10.17
 #
 import streamlit as st
 import argparse
@@ -56,6 +57,7 @@ def main():
     print(f"Loading Docs into GenericLoader")
     document_chunks = load_files(repository_path=repo_dir)
     print(f"Created chunks len is: {len(document_chunks)}")
+    print(document_chunks)
 
     # Load prompt templates
     prompts_text = {

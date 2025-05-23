@@ -13,7 +13,7 @@ chromadb
 langchain-chroma
 langchain-text-splitters
 esprima
-tree_sitter 
+tree_sitter==0.21.3
 tree_sitter_python
 tree_sitter_go
 tree_sitter_languages
