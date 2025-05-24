@@ -1,10 +1,6 @@
 venv/
 data/
 lib/__pycache__/
-data/
 data/db/
-data/db/*
-data/db/*/.bin
-*.bin
-
-
+**/data/*.bin
+**/lib/__pycache/*
