@@ -13,4 +13,15 @@ def load_files(repository_path):
         )
     )
     docs = loader.load()
+    
+    loader = GenericLoader.from_filesystem(
+        repository_path,
+        glob="**/*",
+        suffixes=[".py"],
+        parser=LanguageParser(
+            language=Language.PYTHON
+        )
+    )
+    docs.extend(loader.load())
+
     return docs

@@ -74,10 +74,10 @@ def main():
     llm = load_LLM(model_name)
 
     # Run a test to see if everything working ok
-    print(llm.invoke("Tell me a joke"))
-    prompt = PromptTemplate.from_template("Give {number} names for a {domain} startup?")
-    chain = LLMChain(llm=llm, prompt=prompt)
-    print(chain.invoke({'number': 2, 'domain': 'Medical'}))
+    # print(llm.invoke("Tell me a joke"))
+    # prompt = PromptTemplate.from_template("Give {number} names for a {domain} startup?")
+    # chain = LLMChain(llm=llm, prompt=prompt)
+    # print(chain.invoke({'number': 2, 'domain': 'Medical'}))
     print("-----------------------")
 
     # Load Embeddings
