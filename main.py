@@ -14,6 +14,9 @@ from lib.chain import create_retriever, create_qa_chain
 from lib.utils import read_prompt, load_LLM, select_model, load_embeddings
 from lib.models import MODELS_MAP
 
+from langchain.prompts import PromptTemplate  #test
+from langchain.chains.llm import LLMChain #test
+
 
 set_verbose(True)
 load_dotenv()
@@ -69,17 +72,31 @@ def main():
     
     # Load LLM
     llm = load_LLM(model_name)
+
+    # Run a test to see if everything working ok
     print(llm.invoke("Tell me a joke"))
+    prompt = PromptTemplate.from_template("Give {number} names for a {domain} startup?")
+    chain = LLMChain(llm=llm, prompt=prompt)
+    print(chain.invoke({'number': 2, 'domain': 'Medical'}))
+    print("-----------------------")
 
     # Load Embeddings
     embeddings = load_embeddings(model_name)
-    print(f"Embeddings: ", {embeddings})
+    #print(f"Embeddings: ", {embeddings})
 
-    # Create Retriever
+    # Create Retriever - this makes a DB sqlite and puts all data there
     retriever = create_retriever(model_name, db_dir, document_chunks, embeddings)
+    
+    # Make a LangChain
+    qa_chain = create_qa_chain(llm, retriever, prompts_text)
 
-
-
+    print("\nAsk a question.. 'exit' to quit...")
+    while True:
+        question = input("Question: ")
+        if question.lower() == "exit":
+            break
+        answer = qa_chain.invoke(question)
+        print(f"Answer: {answer}")
 
 if __name__ == "__main__":
     main()

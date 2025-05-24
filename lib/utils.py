@@ -11,20 +11,20 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 def retrieve_answer(output):
-    return output.content
+    return output
 
 def load_LLM(llm_name):
     model_info = MODELS_MAP[llm_name]["name"]
     llm = OllamaLLM(model=model_info)
-    return llm;
+    return llm
 
 def load_embeddings(llm_name):
     embedding_info = MODELS_MAP[llm_name]["embedding_name"]
     print(f"Embeddings selected: ", embedding_info)
     embeddings = OllamaEmbeddings(
-        model="llama3",
+        model="llama3.2",
     )
-    return embeddings;
+    return embeddings
 
 def get_available_models():
     # need to return ollama.list() here
