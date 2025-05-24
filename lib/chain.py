@@ -54,8 +54,9 @@ def create_qa_chain(llm, retriever, prompts_text):
 
     chain = (
         RunnableParallel(context=retriever | format_docs, question = RunnablePassthrough()) |
-        RunnableParallel(answer=initial_prompt | llm | retrieve_answer, 
-                         question=itemgetter("question"), context=itemgetter("context")) 
+        RunnableParallel(answer=initial_prompt | llm | retrieve_answer)
+        # RunnableParallel(answer=initial_prompt | llm | retrieve_answer, 
+        #                  question=itemgetter("question"), context=itemgetter("context")) 
         # RunnableParallel(input =  qa_eval_prompt, context = itemgetter("context"), 
         #                  answer = itemgetter("answer")) |
         # RunnableParallel(evaluation = itemgetter("input") | llm , context = itemgetter("context"), 

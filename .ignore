@@ -2,5 +2,6 @@ venv/
 data/
 lib/__pycache__/
 data/
+data/db/
 
 
