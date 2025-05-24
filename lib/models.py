@@ -4,7 +4,9 @@ MODELS_MAP = {
         # embedding = "nomic-embed-text"
         "embedding_name": "llama3.2"   
     },
-    "dummy": {
-        "class": "dummy"
+    "codellama": {
+        "name":"codellama",
+        # embedding = "nomic-embed-text"
+        "embedding_name": "llama3.2"   
     }
 }
