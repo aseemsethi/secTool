@@ -68,6 +68,7 @@ def main():
     # Load prompt templates
     prompts_text = {
         "initial_prompt": read_prompt(os.path.join(prompt_templates_dir, 'initial_prompt.txt')),
+        "cve_prompt": read_prompt(os.path.join(prompt_templates_dir, 'cve_prompt.txt')),
         "evaluation_prompt": read_prompt(os.path.join(prompt_templates_dir, 'evaluation_prompt.txt')),
         "evaluation_with_context_prompt": read_prompt(os.path.join(prompt_templates_dir, 'evaluation_with_context_prompt.txt'))
     }
@@ -106,7 +107,7 @@ def main():
     print(f"CVEs: {cves[0]}")
 
     # Analyze the CVEs with the RAG github
-    checkCve(cves)
+    checkCve(cves, llm, retriever, prompts_text)
 
 if __name__ == "__main__":
     main()

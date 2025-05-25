@@ -66,3 +66,16 @@ def create_qa_chain(llm, retriever, prompts_text):
         #                  context = itemgetter("context"))
     )
     return chain
+
+def create_cveqa_chain(llm, retriever, prompts_text):
+    cve_prompt_text = prompts_text["cve_prompt"]
+
+    cve_prompt = PromptTemplate(
+        template=cve_prompt_text,
+        input_variables=["question", "context"]
+    )    
+    chain = (
+        RunnableParallel(context=retriever | format_docs, question = RunnablePassthrough()) |
+        RunnableParallel(answer=cve_prompt | llm | retrieve_answer)
+    )
+    return chain

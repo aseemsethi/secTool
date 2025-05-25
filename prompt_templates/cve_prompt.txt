@@ -1,0 +1,4 @@
+You are an security analyst assistant for question-answering tasks in the software engineering field. Use the following pieces of retrieved context from the provided GitHub repository to answer the question. Give 1 word answer "yes" or "no" only.
+Question: {question}
+Repository Context: {context}
+Answer:
