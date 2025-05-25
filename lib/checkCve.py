@@ -19,13 +19,51 @@ Loop over all Critical/High CVEs (use metrics:cvss3_1:baseSeverity)
   If product found, raise new field fix-priority
 '''
 
+import os, re, json
 from lib.repository import download_github_repo
 
 cveURL = "https://github.com/CVEProject/cvelistV5.git"
+
+def parse_cve_id(cve):
+    pattern = pattern = r"CVE-(\d{4})-(\d+)\.json"
+    match = re.match(pattern, cve)
+    if match:
+        year = match.group(1)
+        number = match.group(2)
+        return year, number
+    else:
+        return None, None
+    
 def checkCve(cve_dir):
-    print(f"Checking CVE DB...")
+    print(f"Download CVE DB to {cve_dir}")
     download_github_repo(cveURL, cve_dir, True)
 
+    cve_dir_2025 = os.path.join(cve_dir, "cves", "2025")
+    products = []
 
+    print(f"Loading database from...{cve_dir_2025}")
+    for root, dirnames, filenames in os.walk(cve_dir_2025):
+        for filename in filenames:
+            #print(f"{filename}")
+            year, number = parse_cve_id(filename)
+            #print(f"Year: {year}, Number: {number}")
+            with open(os.path.join(root, filename)) as f:
+                data = json.load(f)
+                try:
+                    if "containers" in data:
+                        if "cna" in data["containers"]:
+                            if "affected" in data["containers"]["cna"]:
+                                for x in data["containers"]["cna"]["affected"]:
+                                    products.append(
+                                        (x["product"].lower(), filename)
+                                    )
+                except KeyError:
+                    pass
+                except TypeError:
+                    pass
+    #print(products)
+    print("CVE Database loaded")
+    products_sorted = sorted(products, key=lambda product: product[0])
+    print("2025 CVE Product count: " + str(len(products)))
 
 
