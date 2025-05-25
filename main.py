@@ -13,6 +13,7 @@ from lib.loader import load_files
 from lib.chain import create_retriever, create_qa_chain
 from lib.utils import read_prompt, load_LLM, select_model, load_embeddings
 from lib.models import MODELS_MAP
+from lib.checkCve import checkCve
 
 from langchain.prompts import PromptTemplate  #test
 from langchain.chains.llm import LLMChain #test
@@ -48,15 +49,16 @@ def main():
     #/Users/aseemsethi/aseem/secTool
     repo_dir = os.path.join(base_dir, "data", repo_name) 
     # /Users/aseemsethi/aseem/secTool/data/scraper
-    db_dir = os.path.join(base_dir, "data", "db") 
+    db_dir = os.path.join(base_dir, "data", "db")
+    cve_dir = os.path.join(base_dir, "data", "cve") 
     # /Users/aseemsethi/aseem/secTool/data/db
-    print (repo_dir, db_dir)
+    print (repo_dir, db_dir, cve_dir)
     prompt_templates_dir = os.path.join(base_dir, "prompt_templates")
     #/Users/aseemsethi/aseem/secTool/prompt_templates
 
     # Download the github repo
     print(f"Downloading repo from {args.repo_url}")
-    download_github_repo(args.repo_url, repo_dir)
+    download_github_repo(args.repo_url, repo_dir, False)
 
     # Load Docs into Loader
     print(f"Loading Docs into GenericLoader")
@@ -97,6 +99,8 @@ def main():
             break
         answer = qa_chain.invoke(question)
         print(f"Answer: {answer}")
+
+    checkCve(cve_dir)
 
 if __name__ == "__main__":
     main()

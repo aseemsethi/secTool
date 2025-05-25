@@ -18,3 +18,14 @@ Loop over all Critical/High CVEs (use metrics:cvss3_1:baseSeverity)
   Search affected:product field using the RAG LLM
   If product found, raise new field fix-priority
 '''
+
+from lib.repository import download_github_repo
+
+cveURL = "https://github.com/CVEProject/cvelistV5.git"
+def checkCve(cve_dir):
+    print(f"Checking CVE DB...")
+    download_github_repo(cveURL, cve_dir, True)
+
+
+
+
