@@ -50,12 +50,16 @@ def checkCve(cve_dir):
             with open(os.path.join(root, filename)) as f:
                 data = json.load(f)
                 try:
+                    # if "cveMetadata" in data:
+                    #     if "cveId" in data["cveMetadata"]:
+                    #         products.append(data["containers"]["cveId"])
                     if "containers" in data:
                         if "cna" in data["containers"]:
                             if "affected" in data["containers"]["cna"]:
                                 for x in data["containers"]["cna"]["affected"]:
-                                    products.append(
-                                        (x["product"].lower(), filename)
+                                    if x["product"] != "n/a":
+                                        products.append(
+                                            (x["product"].lower(), filename.split('.',1)[0])
                                     )
                 except KeyError:
                     pass
@@ -64,6 +68,9 @@ def checkCve(cve_dir):
     #print(products)
     print("CVE Database loaded")
     products_sorted = sorted(products, key=lambda product: product[0])
-    print("2025 CVE Product count: " + str(len(products)))
+    print("2025 CVE Product count: " + str(len(products)))  #22,061
+
+
+
 
 
