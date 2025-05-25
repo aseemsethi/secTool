@@ -75,11 +75,15 @@ def checkCve(cves, llm, retriever, prompts_text):
     print("checkCve: 2025 CVE Product count: " + str(len(cves)))  #22,061
     cveqa_chain = create_cveqa_chain(llm, retriever, prompts_text)
 
+    # This is the 1st run of questions to get a draft list of Impacted CVEs
+    # Seeing lots of hullucinations in responses, and need to again run the
+    # impactedCVEs list throught another round of questions to get a better list
+    # Run 1
     impactedCVEs = []
     cnt = 1
     for cve in cves:
         cnt = cnt+1
-        if cnt > 40 :
+        if cnt > 500 :
             break
         question = "Does this code use " + cve[1] + " product ?"
         print(question)
@@ -88,10 +92,10 @@ def checkCve(cves, llm, retriever, prompts_text):
         if "Yes" in answer['answer']:
             impactedCVEs.append((cve, "Yes"))
             print("Yes.....................................")
-        else:
-            print("No.......")
 
     print(f"Number of CVEs affecting the code {len(impactedCVEs)}")
-    print(impactedCVEs)
+    #print(impactedCVEs)
+
+    # Run 2
 
 
