@@ -13,7 +13,7 @@ from lib.loader import load_files
 from lib.chain import create_retriever, create_qa_chain
 from lib.utils import read_prompt, load_LLM, select_model, load_embeddings
 from lib.models import MODELS_MAP
-from lib.checkCve import checkCve
+from lib.checkCve import loadCve, checkCve
 
 from langchain.prompts import PromptTemplate  #test
 from langchain.chains.llm import LLMChain #test
@@ -100,7 +100,13 @@ def main():
         answer = qa_chain.invoke(question)
         print(f"Answer: {answer}")
 
-    checkCve(cve_dir)
+    cves = loadCve(cve_dir)  
+    # We have a list of 22061 entries in a list of the format
+    # CVE Product Description
+    print(f"CVEs: {cves[0]}")
+
+    # Analyze the CVEs with the RAG github
+    checkCve(cves)
 
 if __name__ == "__main__":
     main()

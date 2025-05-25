@@ -34,7 +34,7 @@ def parse_cve_id(cve):
     else:
         return None, None
     
-def checkCve(cve_dir):
+def loadCve(cve_dir):
     print(f"Download CVE DB to {cve_dir}")
     download_github_repo(cveURL, cve_dir, True)
 
@@ -44,33 +44,33 @@ def checkCve(cve_dir):
     print(f"Loading database from...{cve_dir_2025}")
     for root, dirnames, filenames in os.walk(cve_dir_2025):
         for filename in filenames:
-            #print(f"{filename}")
             year, number = parse_cve_id(filename)
-            #print(f"Year: {year}, Number: {number}")
+            #print(f""Filename: " {filename} Year: {year}, Number: {number}")
             with open(os.path.join(root, filename)) as f:
                 data = json.load(f)
                 try:
-                    # if "cveMetadata" in data:
-                    #     if "cveId" in data["cveMetadata"]:
-                    #         products.append(data["containers"]["cveId"])
+                    description = data.get('containers', {}).get(
+                        'cna', {}).get('descriptions', [{}])[0].get('value', 'N/A')
                     if "containers" in data:
                         if "cna" in data["containers"]:
                             if "affected" in data["containers"]["cna"]:
                                 for x in data["containers"]["cna"]["affected"]:
                                     if x["product"] != "n/a":
                                         products.append(
-                                            (x["product"].lower(), filename.split('.',1)[0])
+                                            (filename.split('.',1)[0], 
+                                             x["product"].lower(), description)
                                     )
                 except KeyError:
                     pass
                 except TypeError:
                     pass
-    #print(products)
+    #print(products[0])
     print("CVE Database loaded")
-    products_sorted = sorted(products, key=lambda product: product[0])
+    products_sorted = sorted(products, key=lambda product: product[1])
     print("2025 CVE Product count: " + str(len(products)))  #22,061
+    return products_sorted
 
-
-
+def checkCve(cves):
+    print("checkCve: 2025 CVE Product count: " + str(len(cves)))  #22,061
 
 
