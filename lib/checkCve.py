@@ -72,8 +72,9 @@ def loadCve(cve_dir):
     return products_sorted
 
 def checkCve(cves, llm, retriever, prompts_text):
-    print("checkCve: 2025 CVE Product count: " + str(len(cves)))  #22,061
     cveqa_chain = create_cveqa_chain(llm, retriever, prompts_text)
+    uniqueCve = list(set(cves))
+    print("checkCve: 2025 CVE Product count: " + str(len(uniqueCve)))  #cves - 22,061, uniqueCves - 20717
 
     # This is the 1st run of questions to get a draft list of Impacted CVEs
     # Seeing lots of hullucinations in responses, and need to again run the
@@ -81,17 +82,17 @@ def checkCve(cves, llm, retriever, prompts_text):
     # Run 1
     impactedCVEs = []
     cnt = 1
-    for cve in cves:
+    for cve in uniqueCve:
         cnt = cnt+1
-        if cnt > 500 :
-            break
+        if cnt % 20 == 0 :
+            print(f"{cnt} with {len(impactedCVEs)} positives")
+            print(impactedCVEs)
         question = "Does this code use " + cve[1] + " product ?"
         print(question)
         answer = cveqa_chain.invoke(question)
-        print(f"Answer: {answer}")
+        #print(f"Answer: {answer}")
         if "Yes" in answer['answer']:
             impactedCVEs.append((cve, "Yes"))
-            print("Yes.....................................")
 
     print(f"Number of CVEs affecting the code {len(impactedCVEs)}")
     #print(impactedCVEs)
