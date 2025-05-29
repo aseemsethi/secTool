@@ -22,6 +22,23 @@ from langchain.chains.llm import LLMChain #test
 set_verbose(True)
 load_dotenv()
 
+@st.fragment(run_every=None)
+def a_fragment(qa_chain):
+    st.write("This is inside of a fragment!")
+    st.title("CVE Check")
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    st.caption("A Streamlit powered chatbot powered by Ollama")
+    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+    for msg in st.session_state.messages:
+        st.chat_message(msg["role"]).write(msg["content"])
+    if prompt := st.chat_input("What is the code written in"):
+        print("..............")
+        answer = qa_chain.invoke(prompt)
+        #print(f"Answer: {answer}")
+        st.chat_message("assistant").write(answer)
+
 def main():
     print("\nSectool........", flush=True)
     #Parse command line args
@@ -93,21 +110,23 @@ def main():
     # Make a LangChain
     qa_chain = create_qa_chain(llm, retriever, prompts_text)
 
-    print("\nAsk a question.. 'exit' to quit...")
-    while True:
-        question = input("Question: ")
-        if question.lower() == "exit":
-            break
-        answer = qa_chain.invoke(question)
-        print(f"Answer: {answer}")
-
     cves = loadCve(cve_dir)  
     # We have a list of 22061 entries in a list of the format
     # CVE Product Description
     print(f"CVEs: {cves[0]}")
 
+    a_fragment(qa_chain)
+
+    # print("\nAsk a question.. 'exit' to quit...")
+    # while True:
+    #     question = input("Question: ")
+    #     if question.lower() == "exit":
+    #         break
+    #     answer = qa_chain.invoke(question)
+    #     print(f"Answer: {answer}")
+
     # Analyze the CVEs with the RAG github
-    checkCve(cves, llm, retriever, prompts_text)
+    # checkCve(cves, llm, retriever, prompts_text)
 
 if __name__ == "__main__":
     main()
