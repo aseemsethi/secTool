@@ -31,26 +31,11 @@ def create_retriever(llm_name, db_path, docs, embeddings, collection_name="local
 
 def create_qa_chain(llm, retriever, prompts_text):
     initial_prompt_text = prompts_text["initial_prompt"]
-    qa_eval_prompt_text = prompts_text["evaluation_prompt"]
-    qa_eval_prompt_with_context_text = prompts_text["evaluation_with_context_prompt"]
 
     initial_prompt = PromptTemplate(
         template=initial_prompt_text,
         input_variables=["question", "context"]
     )    
-    json_parser = JsonOutputParser(pydantic_object=LLMEvalResult)
-
-    qa_eval_prompt = PromptTemplate(
-        template=qa_eval_prompt_text,
-        input_variables=["question", "context"],
-        partial_variables={"format_instructions":json_parser.get_format_instructions()}
-    )
-
-    qa_eval_prompt_with_context = PromptTemplate(
-        template=qa_eval_prompt_text,
-        input_variables=["question","answer","context"],
-        partial_variables={"format_instructions": json_parser.get_format_instructions()},
-    )
 
     chain = (
         RunnableParallel(context=retriever | format_docs, question = RunnablePassthrough()) |

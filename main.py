@@ -17,7 +17,39 @@ from lib.checkCve import loadCve, checkCve
 
 from langchain.prompts import PromptTemplate  #test
 from langchain.chains.llm import LLMChain #test
+from langchain_core.tools import tool
+from langchain_core.messages import AIMessage
+from langchain_core.messages import HumanMessage
 
+
+@tool
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers.
+    Args:
+        a: first int
+        b: second int
+    """
+    print(f"Tool called..multiply {a} and {b}")
+    return a * b
+
+@tool
+def divide(a: int, b: int) -> int:
+    """Divide two numbers."""
+    print(f"Tool called..divide {a} by {b}")
+    return a / b
+
+@tool
+def HowIsWeather() -> str:
+    """Get the Weather."""
+    print(f"Tool called..Weather")
+    return "Good Weather"
+
+tools = [multiply, divide, HowIsWeather]
+tool_functions = {
+    "multiply": multiply,
+    "divide": divide,
+    "HowIsWeather": HowIsWeather,
+}
 
 set_verbose(True)
 load_dotenv()
@@ -91,7 +123,7 @@ def main():
     }
     
     # Load LLM
-    llm = load_LLM(model_name)
+    llm = load_LLM(model_name, tools)
 
     # Run a test to see if everything working ok
     # print(llm.invoke("Tell me a joke"))
@@ -113,17 +145,46 @@ def main():
     cves = loadCve(cve_dir)  
     # We have a list of 22061 entries in a list of the format
     # CVE Product Description
-    print(f"CVEs: {cves[0]}")
+    # print(f"CVEs: {cves[0]}")
 
-    a_fragment(qa_chain)
+    #a_fragment(qa_chain)
+     
+    print(multiply.args)
+    print("\nAsk a question.. 'exit' to quit...")
+    while True:
+        question = input("Question: ")
+        if question.lower() == "exit":
+            break
+        answer = qa_chain.invoke(question)
+        Q1 = [HumanMessage(question)]
+        print(f"Q1-1:  {Q1}")
+        print(f"Answer: {answer}")
+        Q1.append(answer['answer'])
+        print(f"Q1-2:  {Q1}")
+        # Process tool calls
+        #print(answer["answer"].tool_calls)
+        #print(answer["answer"].tool_calls[0]["name"])
 
-    # print("\nAsk a question.. 'exit' to quit...")
-    # while True:
-    #     question = input("Question: ")
-    #     if question.lower() == "exit":
-    #         break
-    #     answer = qa_chain.invoke(question)
-    #     print(f"Answer: {answer}")
+        if answer["answer"].tool_calls:
+            for tool in answer["answer"].tool_calls:
+                print(f"tool call for = {tool}")
+                if function_to_call := tool_functions.get(tool["name"]):
+                    print('Calling function:', tool["name"])
+                    print('Arguments:', tool["args"])
+                    output = function_to_call.invoke(tool)
+                    Q1.append(output)
+                    print('Function output:', output)
+                    print(f"Q1-3:  {Q1}")
+                    # Q1.append(
+                    #     {'role': 'tool', 'content': str(output), 'name': tool["name"]})
+                    # print(f"Q1-4:  {Q1}")
+                    answer = llm.invoke(Q1)
+                    print(f"Answer-: {answer}")
+                else:
+                    print('Function', tool["name"], 'not found')
+        else:
+            print(f"No tool calls made..")
+
 
     # Analyze the CVEs with the RAG github
     # checkCve(cves, llm, retriever, prompts_text)

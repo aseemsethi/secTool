@@ -1,6 +1,8 @@
 from lib.models import MODELS_MAP
 from langchain_ollama.llms import OllamaLLM
+from langchain_ollama import ChatOllama
 from langchain_ollama import OllamaEmbeddings
+from langchain_core.tools import tool
 
 
 def read_prompt(file_name):
@@ -13,9 +15,15 @@ def format_docs(docs):
 def retrieve_answer(output):
     return output
 
-def load_LLM(llm_name):
+def load_LLM(llm_name, tools):
     model_info = MODELS_MAP[llm_name]["name"]
-    llm = OllamaLLM(model=model_info)
+    if (MODELS_MAP[llm_name]["chat"] == "True"):
+        print(f"Chat is true..................................")
+        llm = ChatOllama(model=model_info).bind_tools(tools)
+    else:
+        print(f"Chat is false..................................")
+        llm = OllamaLLM(model=model_info)
+    print(f"LLM returned is: {llm}")
     return llm
 
 def load_embeddings(llm_name):
