@@ -30,7 +30,7 @@ def multiply(a: int, b: int) -> int:
         b: second int
     """
     print(f"Tool called..multiply {a} and {b}")
-    return a * b
+    return (a * b)
 
 @tool
 def divide(a: int, b: int) -> int:
@@ -140,7 +140,7 @@ def main():
     retriever = create_retriever(model_name, db_dir, document_chunks, embeddings)
     
     # Make a LangChain
-    qa_chain = create_qa_chain(llm, retriever, prompts_text)
+    qa_chain = create_qa_chain(llm, retriever, prompts_text, "initial_prompt")
 
     cves = loadCve(cve_dir)  
     # We have a list of 22061 entries in a list of the format
@@ -179,7 +179,7 @@ def main():
                     #     {'role': 'tool', 'content': str(output), 'name': tool["name"]})
                     # print(f"Q1-4:  {Q1}")
                     answer = llm.invoke(Q1)
-                    print(f"Answer-: {answer}")
+                    print(f"Answer-: {answer.content}")
                 else:
                     print('Function', tool["name"], 'not found')
         else:

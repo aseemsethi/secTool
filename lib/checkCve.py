@@ -21,7 +21,7 @@ Loop over all Critical/High CVEs (use metrics:cvss3_1:baseSeverity)
 
 import os, re, json
 from lib.repository import download_github_repo
-from lib.chain import create_cveqa_chain
+from lib.chain import create_qa_chain
 
 cveURL = "https://github.com/CVEProject/cvelistV5.git"
 
@@ -72,7 +72,7 @@ def loadCve(cve_dir):
     return products_sorted
 
 def checkCve(cves, llm, retriever, prompts_text):
-    cveqa_chain = create_cveqa_chain(llm, retriever, prompts_text)
+    cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
     uniqueCve = list(set(cves))
     print("checkCve: 2025 CVE Product count: " + str(len(uniqueCve)))  #cves - 22,061, uniqueCves - 20717
 
@@ -90,9 +90,9 @@ def checkCve(cves, llm, retriever, prompts_text):
         question = "Does this code use " + cve[1] + " product ?"
         print(question)
         answer = cveqa_chain.invoke(question)
-        #print(f"Answer: {answer}")
         if "Yes" in answer['answer']:
             impactedCVEs.append((cve, "Yes"))
+            print(f"Answer: {answer}")
 
     print(f"Number of CVEs affecting the code {len(impactedCVEs)}")
     #print(impactedCVEs)
