@@ -13,7 +13,7 @@ from lib.loader import load_files
 from lib.chain import create_retriever, create_qa_chain
 from lib.utils import read_prompt, load_LLM, select_model, load_embeddings
 from lib.models import MODELS_MAP
-from lib.checkCve import loadCve, checkCve
+from lib.checkCve import cveLogic
 
 from langchain.prompts import PromptTemplate  #test
 from langchain.chains.llm import LLMChain #test
@@ -142,10 +142,8 @@ def main():
     # Make a LangChain
     qa_chain = create_qa_chain(llm, retriever, prompts_text, "initial_prompt")
 
-    cves = loadCve(cve_dir)  
-    # We have a list of 22061 entries in a list of the format
-    # CVE Product Description
-    # print(f"CVEs: {cves[0]}")
+    # Execute CVE Logic
+    cveLogic(cve_dir)
 
     #a_fragment(qa_chain)
      
@@ -184,10 +182,6 @@ def main():
                     print('Function', tool["name"], 'not found')
         else:
             print(f"No tool calls made..")
-
-
-    # Analyze the CVEs with the RAG github
-    # checkCve(cves, llm, retriever, prompts_text)
 
 if __name__ == "__main__":
     main()

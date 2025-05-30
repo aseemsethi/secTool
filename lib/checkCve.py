@@ -35,12 +35,10 @@ def parse_cve_id(cve):
     else:
         return None, None
     
-def loadCve(cve_dir):
-    print(f"Download CVE DB to {cve_dir}")
-    download_github_repo(cveURL, cve_dir, True)
-
+def loadCve2025(cve_dir, fromDate):
     cve_dir_2025 = os.path.join(cve_dir, "cves", "2025")
     products = []
+    cveCount=0
 
     print(f"Loading database from...{cve_dir_2025}")
     for root, dirnames, filenames in os.walk(cve_dir_2025):
@@ -50,13 +48,21 @@ def loadCve(cve_dir):
             with open(os.path.join(root, filename)) as f:
                 data = json.load(f)
                 try:
+                    datePublished = data.get('cveMetadata', {}).get(
+                        'datePublished', {})
+                    #print(f"Date pub: {datePublished}")
+                    if fromDate < datePublished:
+                        cveCount = cveCount+1
+                    else:
+                        continue
                     description = data.get('containers', {}).get(
                         'cna', {}).get('descriptions', [{}])[0].get('value', 'N/A')
                     if "containers" in data:
                         if "cna" in data["containers"]:
                             if "affected" in data["containers"]["cna"]:
                                 for x in data["containers"]["cna"]["affected"]:
-                                    if x["product"] != "n/a":
+                                    if x["product"] != "n/a" and fromDate < datePublished:
+                                        #print(filename.split('.',1)[0])
                                         products.append(
                                             (filename.split('.',1)[0], 
                                              x["product"].lower(), description)
@@ -65,10 +71,9 @@ def loadCve(cve_dir):
                     pass
                 except TypeError:
                     pass
-    #print(products[0])
-    print("CVE Database loaded")
+    #print(f"CVE Database from {fromDate} loaded")
     products_sorted = sorted(products, key=lambda product: product[1])
-    print("2025 CVE Product count: " + str(len(products)))  #22,061
+    print(f"CVEs from {fromDate} - CVE count: {cveCount}, Product count:  {str(len(products))}")  #22,061
     return products_sorted
 
 def checkCve(cves, llm, retriever, prompts_text):
@@ -100,3 +105,12 @@ def checkCve(cves, llm, retriever, prompts_text):
     # Run 2
 
 
+def cveLogic(cve_dir):
+    print(f"Download CVE DB to {cve_dir}")
+    download_github_repo(cveURL, cve_dir, True) # True means "git pull" to update
+    fromDate = "2025-05-20T00:00:00.000Z"
+    cves = loadCve2025(cve_dir, fromDate)  
+    # We have a list of 22061 entries in a list of the format
+    # print(f"CVEs: {cves[0]}")
+    # Analyze the CVEs with the RAG github
+    # checkCve(cves, llm, retriever, prompts_text)
