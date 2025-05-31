@@ -35,16 +35,18 @@ def parse_cve_id(cve):
     else:
         return None, None
     
-def loadCve2025(cve_dir, fromDate):
+def loadCve2025(cve_dir, fromDate, fromSev):
     cve_dir_2025 = os.path.join(cve_dir, "cves", "2025")
     products = []
     cveCount=0
+    zeroScore=0
+    ignoreSev=0
 
     print(f"Loading database from...{cve_dir_2025}")
     for root, dirnames, filenames in os.walk(cve_dir_2025):
         for filename in filenames:
             year, number = parse_cve_id(filename)
-            #print(f""Filename: " {filename} Year: {year}, Number: {number}")
+            #print(f"Filename: {filename} Year: {year}, Number: {number}")
             with open(os.path.join(root, filename)) as f:
                 data = json.load(f)
                 try:
@@ -54,6 +56,24 @@ def loadCve2025(cve_dir, fromDate):
                     if fromDate < datePublished:
                         cveCount = cveCount+1
                     else:
+                        continue
+                    #v3.1: Critical 9-10, High 7 - 8.9, Med - 4 - 6.9, Low - .1 to 3.9
+                    basescore = data.get('containers', {}).get(
+                        'cna', {}).get('metrics',[{}])[0].get('cvssV4_0', {}).get(
+                            'baseScore', {})
+                    #print(f"V4.0 BaseScore: {basescore}")
+                    if not basescore:
+                        basescore = data.get('containers', {}).get(
+                        'cna', {}).get('metrics',[{}])[0].get('cvssV3_1', {}).get(
+                            'baseScore', {})
+                        #print(f"V3.1 BaseScore: {basescore}")
+                    if not basescore:
+                        # is there is no basescore, we will skip this
+                        # print(f"Base score is 0 for: {filename}")
+                        zeroScore = zeroScore + 1
+                        continue
+                    if basescore < fromSev:
+                        ignoreSev = ignoreSev +1
                         continue
                     description = data.get('containers', {}).get(
                         'cna', {}).get('descriptions', [{}])[0].get('value', 'N/A')
@@ -65,18 +85,18 @@ def loadCve2025(cve_dir, fromDate):
                                         #print(filename.split('.',1)[0])
                                         products.append(
                                             (filename.split('.',1)[0], 
-                                             x["product"].lower(), description)
+                                             x["product"].lower(), description, basescore)
                                     )
                 except KeyError:
                     pass
                 except TypeError:
                     pass
     #print(f"CVE Database from {fromDate} loaded")
+    # Total Product CVEs are more, since multiple products could be impacted in 1 CVE
     products_sorted = sorted(products, key=lambda product: product[1])
-    print(f"CVEs from {fromDate} - CVE Product count: {cveCount}, Product count:  {str(len(products))}")  #22,061
-    uniqueCve = list(set(products_sorted))
-    print("checkCve: 2025 CVE Unique Product count: " + str(len(uniqueCve)))  #cves - 22,061, uniqueCves - 20717
-    return uniqueCve
+    print(f"CVEs from {fromDate} - Total CVEs: {cveCount},"
+          f"ZeroSev: {zeroScore}, IgnoreSev: {ignoreSev}, Final Count:  {str(len(products))}")  #22,061
+    return products_sorted
 
 def checkCveforProduct(cves, llm, retriever, prompts_text):
     cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
@@ -97,7 +117,6 @@ def checkCveforProduct(cves, llm, retriever, prompts_text):
             print(f"Answer: {answer}")
 
     print(f"Number of CVEs affecting the code {len(impactedCVEs)}")
-    #print(impactedCVEs)
 
     # Run 2
 
@@ -106,7 +125,8 @@ def cveLogic(cve_dir, llm, retriever, prompts_text):
     print(f"Download CVE DB to {cve_dir}")
     download_github_repo(cveURL, cve_dir, True) # True means "git pull" to update
     fromDate = "2025-05-20T00:00:00.000Z"
-    cves = loadCve2025(cve_dir, fromDate)  
+    fromSev = 7
+    cves = loadCve2025(cve_dir, fromDate, fromSev)  
     # We have a list of 22061 entries in a list of the format
     # print(f"CVEs: {cves[0]}")
     # Analyze the CVEs with the RAG github

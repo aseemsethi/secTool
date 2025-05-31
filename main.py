@@ -143,7 +143,7 @@ def main():
     qa_chain = create_qa_chain(llm, retriever, prompts_text, "initial_prompt")
 
     # Execute CVE Logic
-    # cveLogic(cve_dir, llm, retriever, prompts_text)
+    cveLogic(cve_dir, llm, retriever, prompts_text)
 
     #a_fragment(qa_chain)
      
