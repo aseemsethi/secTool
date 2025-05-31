@@ -73,21 +73,18 @@ def loadCve2025(cve_dir, fromDate):
                     pass
     #print(f"CVE Database from {fromDate} loaded")
     products_sorted = sorted(products, key=lambda product: product[1])
-    print(f"CVEs from {fromDate} - CVE count: {cveCount}, Product count:  {str(len(products))}")  #22,061
-    return products_sorted
+    print(f"CVEs from {fromDate} - CVE Product count: {cveCount}, Product count:  {str(len(products))}")  #22,061
+    uniqueCve = list(set(products_sorted))
+    print("checkCve: 2025 CVE Unique Product count: " + str(len(uniqueCve)))  #cves - 22,061, uniqueCves - 20717
+    return uniqueCve
 
-def checkCve(cves, llm, retriever, prompts_text):
+def checkCveforProduct(cves, llm, retriever, prompts_text):
     cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
-    uniqueCve = list(set(cves))
-    print("checkCve: 2025 CVE Product count: " + str(len(uniqueCve)))  #cves - 22,061, uniqueCves - 20717
 
     # This is the 1st run of questions to get a draft list of Impacted CVEs
-    # Seeing lots of hullucinations in responses, and need to again run the
-    # impactedCVEs list throught another round of questions to get a better list
-    # Run 1
     impactedCVEs = []
     cnt = 1
-    for cve in uniqueCve:
+    for cve in cves:
         cnt = cnt+1
         if cnt % 20 == 0 :
             print(f"{cnt} with {len(impactedCVEs)} positives")
@@ -105,7 +102,7 @@ def checkCve(cves, llm, retriever, prompts_text):
     # Run 2
 
 
-def cveLogic(cve_dir):
+def cveLogic(cve_dir, llm, retriever, prompts_text):
     print(f"Download CVE DB to {cve_dir}")
     download_github_repo(cveURL, cve_dir, True) # True means "git pull" to update
     fromDate = "2025-05-20T00:00:00.000Z"
@@ -113,4 +110,4 @@ def cveLogic(cve_dir):
     # We have a list of 22061 entries in a list of the format
     # print(f"CVEs: {cves[0]}")
     # Analyze the CVEs with the RAG github
-    # checkCve(cves, llm, retriever, prompts_text)
+    checkCveforProduct(cves, llm, retriever, prompts_text)

@@ -143,7 +143,7 @@ def main():
     qa_chain = create_qa_chain(llm, retriever, prompts_text, "initial_prompt")
 
     # Execute CVE Logic
-    cveLogic(cve_dir)
+    # cveLogic(cve_dir, llm, retriever, prompts_text)
 
     #a_fragment(qa_chain)
      
@@ -159,9 +159,6 @@ def main():
         print(f"Answer: {answer}")
         Q1.append(answer['answer'])
         print(f"Q1-2:  {Q1}")
-        # Process tool calls
-        #print(answer["answer"].tool_calls)
-        #print(answer["answer"].tool_calls[0]["name"])
 
         if answer["answer"].tool_calls:
             for tool in answer["answer"].tool_calls:
@@ -173,9 +170,6 @@ def main():
                     Q1.append(output)
                     print('Function output:', output)
                     print(f"Q1-3:  {Q1}")
-                    # Q1.append(
-                    #     {'role': 'tool', 'content': str(output), 'name': tool["name"]})
-                    # print(f"Q1-4:  {Q1}")
                     answer = llm.invoke(Q1)
                     print(f"Answer-: {answer.content}")
                 else:
