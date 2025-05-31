@@ -117,7 +117,11 @@ def checkCveforProduct(cves, llm, retriever, prompts_text):
             print(f"Answer: {answer}")
 
     print(f"Number of CVEs affecting the code {len(impactedCVEs)}")
+    return impactedCVEs
 
+
+def checkCveforX(cves, llm, retriever, prompts_text):
+    cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
     # Run 2
 
 
@@ -129,5 +133,8 @@ def cveLogic(cve_dir, llm, retriever, prompts_text):
     cves = loadCve2025(cve_dir, fromDate, fromSev)  
     # We have a list of 22061 entries in a list of the format
     # print(f"CVEs: {cves[0]}")
-    # Analyze the CVEs with the RAG github
-    checkCveforProduct(cves, llm, retriever, prompts_text)
+    # Analyze the CVEs for Product with the RAG github
+    impactedCVEs = checkCveforProduct(cves, llm, retriever, prompts_text)
+    # Analyze the impacted CVEs
+    checkCveforX(impactedCVEs, llm, retriever, prompts_text)
+
