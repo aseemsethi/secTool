@@ -22,13 +22,13 @@ from langchain_core.tools import tool
 from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
 
-# invoke with URL to run CVE check on the repo
+# Tool Invocation
 #   Repo is picked from .env or paramter, and made into a RAG
 #   python main.py --repo_url https://github.com/aseemsethi/scraper.git
 # or 
 #   Repo is picked from .env or paramter, and made into a RAG
 #   python main.py --chat                (chst interface)
-#   python main.py --chat --CVE CVE-1234 (this enabled a chat with repo and CVE input)
+#   python main.py --chat --CVE CVE-2025-5000 (this enabled a chat with repo and CVE input)
 #   python main.py                       (skips chat interface, and CVE tests are run)
 
 @tool
@@ -192,7 +192,7 @@ def main():
     #print(f"Embeddings: ", {embeddings})
 
     # Create Retriever - this makes a DB sqlite and puts all data there
-    retriever = create_retriever(model_name, db_dir, document_chunks, embeddings)
+    retriever = create_retriever(db_dir, document_chunks, embeddings)
 
     # The following call was to test Streamlit UI
     #webui_func(qa_chain)
@@ -205,7 +205,7 @@ def main():
         chatInterface(llm, qa_chain)
     else:
         # Execute CVE Logic
-        cveLogic(cve_dir, llm, retriever, prompts_text, cveid)
+        cveLogic(cve_dir, llm, retriever, prompts_text, cveid, db_dir, embeddings)
 
 if __name__ == "__main__":
     main()

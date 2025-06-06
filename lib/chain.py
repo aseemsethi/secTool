@@ -11,7 +11,21 @@ from lib.models import MODELS_MAP
 from lib.utils import format_docs, retrieve_answer, load_embeddings
 from lib.entities import LLMEvalResult
 
-def create_retriever(llm_name, db_path, docs, embeddings, collection_name="local-rag"):
+globalId = "1"
+def update_retriever(db_path, docs, embeddings, collection_name="local-rag"):
+    global globalId
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=60)
+    splits = text_splitter.split_documents(docs)
+    print(f"DB Path exists, {db_path}")
+    vectorstore = Chroma(persist_directory=db_path, embedding_function=embeddings, 
+                            collection_name=collection_name)
+    vectorstore.add_documents(documents=splits, ids=[globalId])
+    globalId = str(int(globalId)+1)
+    retriever = vectorstore.as_retriever()
+    print(f"Update Retriver: {retriever}")
+    return retriever
+
+def create_retriever(db_path, docs, embeddings, collection_name="local-rag"):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=60)
     splits = text_splitter.split_documents(docs)
     #print(f"Splits: {splits} embeddings: {embeddings}")

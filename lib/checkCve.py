@@ -24,7 +24,11 @@ from lib.repository import download_github_repo
 from lib.chain import create_qa_chain
 from dotenv import load_dotenv
 import requests
-
+from lib.chain import update_retriever
+from langchain_community.document_loaders.generic import GenericLoader
+from langchain_core.messages import HumanMessage
+from langchain_text_splitters import RecursiveJsonSplitter
+from langchain_core.documents import Document
 
 cveURL = "https://github.com/CVEProject/cvelistV5.git"
 
@@ -145,7 +149,7 @@ def loadCve(cve_dir, cveid):
                 except TypeError:
                     pass
     products_sorted = sorted(products, key=lambda product: product[1])
-    return products_sorted
+    return data, products_sorted
 
 
 def checkCveforProduct(cves, llm, retriever, prompts_text):
@@ -174,26 +178,39 @@ def checkCveforX(cves, llm, retriever, prompts_text):
     cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
     # Run 2
 
-def cveChecker(cve_dir, cveid):
-    products = loadCve(cve_dir, cveid)
+def cveChecker(cve_dir, cveid, db_dir, embeddings, llm, prompts_text):
+    data, products = loadCve(cve_dir, cveid)
     print(f"Products impacted:  {str(len(products))}")
     #print(products)
     for product in products:
         print(f"Product: {product[1]}, BaseScore: {product[3]}")
+    # Load Document
+    splitter = RecursiveJsonSplitter(max_chunk_size=300)
+    json_chunks = splitter.split_json(json_data=data)
+    texts = splitter.create_documents(texts=json_chunks)
+    count = 1
+    for text in texts:
+        print(text)
+        retriever = update_retriever(db_dir, [text], embeddings)
+        count += 1
+        if count > 3:
+            break
+    # Make a LangChain
+    qa_chain = create_qa_chain(llm, retriever, prompts_text, "initial_prompt")
+    print("\nAsk a question.. 'exit' to quit...")
+    while True:
+        question = input("Question: ")
+        if question.lower() == "exit":
+            break
+        answer = qa_chain.invoke(question)
+        Q1 = [HumanMessage(question)]
+        print(f"Answer: {answer}")
 
-
-    # headers = {"User-Agent": "Mozilla/5.0"}
-    # url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
-    # response = requests.get(url, params={"cveId": cveid}, headers=headers)
-    # data = response.json()
-    # print(json.dumps(data, indent=4))
-
-
-def cveLogic(cve_dir, llm, retriever, prompts_text, cveid):
+def cveLogic(cve_dir, llm, retriever, prompts_text, cveid, db_dir, embeddings):
     if cveid != "":
         print("-----------------------")
         print(f"Return info on 1 CVEID only")
-        cveChecker(cve_dir, cveid)
+        cveChecker(cve_dir, cveid, db_dir, embeddings, llm, prompts_text)
         return
     
     print(f"Download CVE DB to {cve_dir}")
