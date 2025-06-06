@@ -26,8 +26,9 @@ from langchain_core.messages import HumanMessage
 #   python main.py --repo_url https://github.com/aseemsethi/scraper.git
 # or 
 #   Repo is picked from .env or paramter, and made into a RAG
-#   python main.py --chat
-#   python main.py (to skip the chat interface, and CVE tests are run)
+#   python main.py --chat                (chst interface)
+#   python main.py --chat --CVE CVE-1234 (this enabled a chat with repo and CVE input)
+#   python main.py                       (skips chat interface, and CVE tests are run)
 
 @tool
 def multiply(a: int, b: int) -> int:
@@ -114,6 +115,7 @@ def main():
     # args - github URL that we would like to check
     parser = argparse.ArgumentParser(description="GitHub Repo Security Application")
     parser.add_argument("--repo_url", type=str, help="URL of GitHub repo", default="")
+    parser.add_argument("--CVE", type=str, help="CVE ID as CVE-xxxx", default="")
     # If action param is used, --chat is a flag and needs no value
     parser.add_argument("--chat", help="provides a chat interface", action="store_true")
     args = parser.parse_args()
@@ -128,6 +130,13 @@ def main():
     # Extract the repo name from the GitHub URL passed as params
     repo_name = repo_url.split("/")[-1].replace(".git","")
     print(f"repo_name: {repo_name}")
+    ##### CVE ID #####
+    cveid = args.CVE
+    if cveid == "":
+        print(f"No CVE ID given")
+    else:
+        print (f"CVE ID: {cveid}")
+
 
     # Prompt the user to select a model
     # Our models are locally behind ollama. Run ollama run <model>
@@ -192,7 +201,7 @@ def main():
         chatInterface(llm, qa_chain)
     else:
         # Execute CVE Logic
-        cveLogic(cve_dir, llm, retriever, prompts_text)
+        cveLogic(cve_dir, llm, retriever, prompts_text, cveid)
 
 if __name__ == "__main__":
     main()

@@ -126,8 +126,15 @@ def checkCveforX(cves, llm, retriever, prompts_text):
     cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
     # Run 2
 
+def cveChecker(cveid):
+    print(f"cveChecker called...")
 
-def cveLogic(cve_dir, llm, retriever, prompts_text):
+def cveLogic(cve_dir, llm, retriever, prompts_text, cveid):
+    if cveid != "":
+        print(f"Return info on 1 CVEID only")
+        cveChecker(cveid)
+        return
+    
     print(f"Download CVE DB to {cve_dir}")
     download_github_repo(cveURL, cve_dir, True) # True means "git pull" to update
     #fromDate = "2025-05-20T00:00:00.000Z"
