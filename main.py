@@ -112,7 +112,7 @@ def main():
     print("\nSectool........", flush=True)
     #Parse command line args
     # args - github URL that we would like to check
-    parser = argparse.ArgumentParser(description="GitHub Repo QA CLI Application")
+    parser = argparse.ArgumentParser(description="GitHub Repo Security Application")
     parser.add_argument("--repo_url", type=str, help="URL of GitHub repo", default="")
     # If action param is used, --chat is a flag and needs no value
     parser.add_argument("--chat", help="provides a chat interface", action="store_true")
