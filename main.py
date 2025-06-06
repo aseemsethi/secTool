@@ -5,7 +5,7 @@
 import streamlit as st
 import argparse
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 from langchain.globals import set_debug, set_verbose
 from lib.repository import download_github_repo
@@ -21,6 +21,10 @@ from langchain_core.tools import tool
 from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
 
+# invoke with 
+# python main.py --repo_url https://github.com/aseemsethi/scraper.git
+# or 
+# python main.py and ensure .env has all the variables
 
 @tool
 def multiply(a: int, b: int) -> int:
@@ -52,7 +56,6 @@ tool_functions = {
 }
 
 set_verbose(True)
-load_dotenv()
 
 @st.fragment(run_every=None)
 def a_fragment(qa_chain):
@@ -76,21 +79,27 @@ def main():
     #Parse command line args
     # args - github URL that we would like to check
     parser = argparse.ArgumentParser(description="GitHub Repo QA CLI Application")
-    parser.add_argument("repo_url", type=str, help="URL of GitHub repo")
+    parser.add_argument("--repo_url", type=str, help="URL of GitHub repo", default="")
     args = parser.parse_args()
     print(f"Github URL : {args.repo_url}")
+    repo_url = args.repo_url
 
+    #print(os.getcwd())
+    load_dotenv()
+    if (args.repo_url == ""):
+        repo_url = os.getenv('GITHUB_URL')
+        print(f"Repo name null, picking from env - {repo_url}")
+
+    # Extract the repo name from the GitHub URL passed as params
+    repo_name = repo_url.split("/")[-1].replace(".git","")
+    print(f"repo_name: {repo_name}")
+    
     # Prompt the user to select a model
     # Our models are locally behind ollama. Run ollama run <model>
     # to run the models and access using REST API
     model_name = select_model()
     selection = MODELS_MAP[model_name]["name"]
     print(f"Model selected: {selection}")
-
-    # Extract the repo name from the GitHub URL passed as params
-    repo_name = args.repo_url.split("/")[-1].replace(".git","")
-    print(f"repo_name: {repo_name}")
-
 
     # We have data/ in the .ignore files, so these downloads do not get committed.
     # Get path to data folder from URL https://github.com/aseemsethi/scraper.git
