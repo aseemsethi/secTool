@@ -23,6 +23,8 @@ import os, re, json
 from lib.repository import download_github_repo
 from lib.chain import create_qa_chain
 from dotenv import load_dotenv
+import requests
+
 
 cveURL = "https://github.com/CVEProject/cvelistV5.git"
 
@@ -100,6 +102,52 @@ def loadCve2025(cve_dir, fromDate, fromSev):
           f"\nFinal CVE Count:  {str(len(products))}\n")  #22,061
     return products_sorted
 
+def loadCve(cve_dir, cveid):
+    products = []
+    year = cveid.split('-')[1]
+    cve_dir_year = os.path.join(cve_dir, "cves", year)
+    cveid_filename = cveid+'.json'
+    print(f"Searching {cveid_filename} in DB from...{cve_dir_year}")
+    for root, dirnames, filenames in os.walk(cve_dir_year):
+        for filename in filenames:
+            #print(f"Filename: {filename} {cveid+'.json'}")
+            if filename == cveid_filename:
+                print(f"CVE found in DB: {filename}")
+            else:
+                continue     
+            with open(os.path.join(root, filename)) as f:
+                data = json.load(f)
+                try:
+                    datePublished = data.get('cveMetadata', {}).get(
+                        'datePublished', {})
+                    basescore = data.get('containers', {}).get(
+                        'cna', {}).get('metrics',[{}])[0].get('cvssV4_0', {}).get(
+                            'baseScore', {})
+                    #print(f"V4.0 BaseScore: {basescore}")
+                    if not basescore:
+                        basescore = data.get('containers', {}).get(
+                        'cna', {}).get('metrics',[{}])[0].get('cvssV3_1', {}).get(
+                            'baseScore', {})
+                    description = data.get('containers', {}).get(
+                        'cna', {}).get('descriptions', [{}])[0].get('value', 'N/A')
+                    if "containers" in data:
+                        if "cna" in data["containers"]:
+                            if "affected" in data["containers"]["cna"]:
+                                for x in data["containers"]["cna"]["affected"]:
+                                    if x["product"] != "n/a":
+                                        #print(filename.split('.',1)[0])
+                                        products.append(
+                                            (filename.split('.',1)[0], 
+                                             x["product"].lower(), description, basescore)
+                                    )
+                except KeyError:
+                    pass
+                except TypeError:
+                    pass
+    products_sorted = sorted(products, key=lambda product: product[1])
+    return products_sorted
+
+
 def checkCveforProduct(cves, llm, retriever, prompts_text):
     cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
 
@@ -126,13 +174,26 @@ def checkCveforX(cves, llm, retriever, prompts_text):
     cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
     # Run 2
 
-def cveChecker(cveid):
-    print(f"cveChecker called...")
+def cveChecker(cve_dir, cveid):
+    products = loadCve(cve_dir, cveid)
+    print(f"Products impacted:  {str(len(products))}")
+    #print(products)
+    for product in products:
+        print(f"Product: {product[1]}, BaseScore: {product[3]}")
+
+
+    # headers = {"User-Agent": "Mozilla/5.0"}
+    # url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+    # response = requests.get(url, params={"cveId": cveid}, headers=headers)
+    # data = response.json()
+    # print(json.dumps(data, indent=4))
+
 
 def cveLogic(cve_dir, llm, retriever, prompts_text, cveid):
     if cveid != "":
+        print("-----------------------")
         print(f"Return info on 1 CVEID only")
-        cveChecker(cveid)
+        cveChecker(cve_dir, cveid)
         return
     
     print(f"Download CVE DB to {cve_dir}")

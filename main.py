@@ -5,6 +5,7 @@
 import streamlit as st
 import argparse
 import os
+import re
 from dotenv import load_dotenv
 
 from langchain.globals import set_debug, set_verbose
@@ -136,6 +137,9 @@ def main():
         print(f"No CVE ID given")
     else:
         print (f"CVE ID: {cveid}")
+        cve_pattern = re.compile(r'^CVE-\d{4}-\d{4,}$')
+        if not cve_pattern.match(cveid.upper()):
+            parser.error("Invalid CVE format. Expected format: CVE-YYYY-NNNNN")
 
 
     # Prompt the user to select a model
