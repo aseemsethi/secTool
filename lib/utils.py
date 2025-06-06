@@ -18,6 +18,7 @@ def retrieve_answer(output):
 def load_LLM(llm_name, tools):
     model_info = MODELS_MAP[llm_name]["name"]
     if (MODELS_MAP[llm_name]["chat"] == "True"):
+        # Tools work with ChatModels only - llama3.2 chat
         print(f"Chat is true..................................")
         llm = ChatOllama(model=model_info).bind_tools(tools)
     else:

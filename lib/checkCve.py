@@ -22,6 +22,7 @@ Loop over all Critical/High CVEs (use metrics:cvss3_1:baseSeverity)
 import os, re, json
 from lib.repository import download_github_repo
 from lib.chain import create_qa_chain
+from dotenv import load_dotenv
 
 cveURL = "https://github.com/CVEProject/cvelistV5.git"
 
@@ -94,8 +95,9 @@ def loadCve2025(cve_dir, fromDate, fromSev):
     #print(f"CVE Database from {fromDate} loaded")
     # Total Product CVEs are more, since multiple products could be impacted in 1 CVE
     products_sorted = sorted(products, key=lambda product: product[1])
-    print(f"CVEs from {fromDate} - Total CVEs: {cveCount},"
-          f"ZeroSev: {zeroScore}, IgnoreSev: {ignoreSev}, Final Count:  {str(len(products))}")  #22,061
+    print(f"CVEs from {fromDate} - Total CVEs: {cveCount}, "
+          f"ZeroSev: {zeroScore}, IgnoreSev < fromSev: {ignoreSev}, "
+          f"\nFinal CVE Count:  {str(len(products))}\n")  #22,061
     return products_sorted
 
 def checkCveforProduct(cves, llm, retriever, prompts_text):
@@ -128,8 +130,10 @@ def checkCveforX(cves, llm, retriever, prompts_text):
 def cveLogic(cve_dir, llm, retriever, prompts_text):
     print(f"Download CVE DB to {cve_dir}")
     download_github_repo(cveURL, cve_dir, True) # True means "git pull" to update
-    fromDate = "2025-05-20T00:00:00.000Z"
-    fromSev = 7
+    #fromDate = "2025-05-20T00:00:00.000Z"
+    fromDate = os.getenv('fromDate')
+    fromSev = int(os.getenv('fromSev'))
+    print(f"fromDate, fromSev from env: {fromDate, fromSev} ..............")
     cves = loadCve2025(cve_dir, fromDate, fromSev)  
     # We have a list of 22061 entries in a list of the format
     # print(f"CVEs: {cves[0]}")

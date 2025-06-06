@@ -5,7 +5,7 @@
 import streamlit as st
 import argparse
 import os
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 
 from langchain.globals import set_debug, set_verbose
 from lib.repository import download_github_repo
