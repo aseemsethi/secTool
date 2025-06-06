@@ -21,10 +21,13 @@ from langchain_core.tools import tool
 from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
 
-# invoke with 
-# python main.py --repo_url https://github.com/aseemsethi/scraper.git
+# invoke with URL to run CVE check on the repo
+#   Repo is picked from .env or paramter, and made into a RAG
+#   python main.py --repo_url https://github.com/aseemsethi/scraper.git
 # or 
-# python main.py and ensure .env has all the variables
+#   Repo is picked from .env or paramter, and made into a RAG
+#   python main.py --chat
+#   python main.py (to skip the chat interface, and CVE tests are run)
 
 @tool
 def multiply(a: int, b: int) -> int:
@@ -58,7 +61,7 @@ tool_functions = {
 set_verbose(True)
 
 @st.fragment(run_every=None)
-def a_fragment(qa_chain):
+def webui_func(qa_chain):
     st.write("This is inside of a fragment!")
     st.title("CVE Check")
     # Initialize chat history
@@ -74,26 +77,58 @@ def a_fragment(qa_chain):
         #print(f"Answer: {answer}")
         st.chat_message("assistant").write(answer)
 
+def chatInterface(llm, qa_chain):
+    print("\nAsk a question.. 'exit' to quit...")
+    while True:
+        question = input("Question: ")
+        if question.lower() == "exit":
+            break
+        answer = qa_chain.invoke(question)
+        Q1 = [HumanMessage(question)]
+        #print(f"Q1-1:  {Q1}")
+        print(f"Answer: {answer}")
+
+        try:
+            if answer["answer"].tool_calls:
+                Q1.append(answer['answer'])
+                print(f"Q1-2:  {Q1}")
+                for tool in answer["answer"].tool_calls:
+                    print(f"tool call for = {tool}")
+                    if function_to_call := tool_functions.get(tool["name"]):
+                        print('Calling function:', tool["name"])
+                        print('Arguments:', tool["args"])
+                        output = function_to_call.invoke(tool)
+                        Q1.append(output)
+                        print('Function output:', output)
+                        print(f"Q1-3:  {Q1}")
+                        answer = llm.invoke(Q1)
+                        print(f"Answer-: {answer.content}")
+                    else:
+                        print('Function', tool["name"], 'not found')
+        except:
+            print(f"No tool calls made..")
+
 def main():
     print("\nSectool........", flush=True)
     #Parse command line args
     # args - github URL that we would like to check
     parser = argparse.ArgumentParser(description="GitHub Repo QA CLI Application")
     parser.add_argument("--repo_url", type=str, help="URL of GitHub repo", default="")
+    # If action param is used, --chat is a flag and needs no value
+    parser.add_argument("--chat", help="provides a chat interface", action="store_true")
     args = parser.parse_args()
     print(f"Github URL : {args.repo_url}")
     repo_url = args.repo_url
 
-    #print(os.getcwd())
     load_dotenv()
+    ##### Repo URL #####
     if (args.repo_url == ""):
         repo_url = os.getenv('GITHUB_URL')
         print(f"Repo name null, picking from env - {repo_url}")
-
     # Extract the repo name from the GitHub URL passed as params
     repo_name = repo_url.split("/")[-1].replace(".git","")
     print(f"repo_name: {repo_name}")
-    
+
     # Prompt the user to select a model
     # Our models are locally behind ollama. Run ollama run <model>
     # to run the models and access using REST API
@@ -115,8 +150,8 @@ def main():
     #/Users/aseemsethi/aseem/secTool/prompt_templates
 
     # Download the github repo
-    print(f"Downloading repo from {args.repo_url}")
-    download_github_repo(args.repo_url, repo_dir, False)
+    print(f"Downloading repo from {repo_url}")
+    download_github_repo(repo_url, repo_dir, False)
 
     # Load Docs into Loader
     print(f"Loading Docs into GenericLoader")
@@ -126,9 +161,7 @@ def main():
     # Load prompt templates
     prompts_text = {
         "initial_prompt": read_prompt(os.path.join(prompt_templates_dir, 'initial_prompt.txt')),
-        "cve_prompt": read_prompt(os.path.join(prompt_templates_dir, 'cve_prompt.txt')),
-        "evaluation_prompt": read_prompt(os.path.join(prompt_templates_dir, 'evaluation_prompt.txt')),
-        "evaluation_with_context_prompt": read_prompt(os.path.join(prompt_templates_dir, 'evaluation_with_context_prompt.txt'))
+        "cve_prompt": read_prompt(os.path.join(prompt_templates_dir, 'cve_prompt.txt'))
     }
     
     # Load LLM
@@ -147,44 +180,19 @@ def main():
 
     # Create Retriever - this makes a DB sqlite and puts all data there
     retriever = create_retriever(model_name, db_dir, document_chunks, embeddings)
-    
-    # Make a LangChain
-    qa_chain = create_qa_chain(llm, retriever, prompts_text, "initial_prompt")
 
-    # Execute CVE Logic
-    cveLogic(cve_dir, llm, retriever, prompts_text)
+    # The following call was to test Streamlit UI
+    #webui_func(qa_chain)
 
-    #a_fragment(qa_chain)
-     
-    print(multiply.args)
-    print("\nAsk a question.. 'exit' to quit...")
-    while True:
-        question = input("Question: ")
-        if question.lower() == "exit":
-            break
-        answer = qa_chain.invoke(question)
-        Q1 = [HumanMessage(question)]
-        print(f"Q1-1:  {Q1}")
-        print(f"Answer: {answer}")
-        Q1.append(answer['answer'])
-        print(f"Q1-2:  {Q1}")
-
-        if answer["answer"].tool_calls:
-            for tool in answer["answer"].tool_calls:
-                print(f"tool call for = {tool}")
-                if function_to_call := tool_functions.get(tool["name"]):
-                    print('Calling function:', tool["name"])
-                    print('Arguments:', tool["args"])
-                    output = function_to_call.invoke(tool)
-                    Q1.append(output)
-                    print('Function output:', output)
-                    print(f"Q1-3:  {Q1}")
-                    answer = llm.invoke(Q1)
-                    print(f"Answer-: {answer.content}")
-                else:
-                    print('Function', tool["name"], 'not found')
-        else:
-            print(f"No tool calls made..")
+    # Chat Function Interface
+    if args.chat:
+        print("Initiating Chat Interface")
+        # Make a LangChain
+        qa_chain = create_qa_chain(llm, retriever, prompts_text, "initial_prompt")
+        chatInterface(llm, qa_chain)
+    else:
+        # Execute CVE Logic
+        cveLogic(cve_dir, llm, retriever, prompts_text)
 
 if __name__ == "__main__":
     main()

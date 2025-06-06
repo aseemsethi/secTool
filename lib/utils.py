@@ -19,10 +19,9 @@ def load_LLM(llm_name, tools):
     model_info = MODELS_MAP[llm_name]["name"]
     if (MODELS_MAP[llm_name]["chat"] == "True"):
         # Tools work with ChatModels only - llama3.2 chat
-        print(f"Chat is true..................................")
+        print(f"Chat LLM is used..................................")
         llm = ChatOllama(model=model_info).bind_tools(tools)
     else:
-        print(f"Chat is false..................................")
         llm = OllamaLLM(model=model_info)
     print(f"LLM returned is: {llm}")
     return llm

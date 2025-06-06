@@ -8,14 +8,7 @@ MODELS_MAP = {
         "embedding_name": "llama3.2",
         "chat": "False"   
     },
-    "llama3.2": {
-        # 2B
-        "name":"llama3.2",
-        # embedding = "nomic-embed-text"
-        "embedding_name": "llama3.2",
-        "chat": "False"   
-    },
-    "llama3.2 Chat": {
+    "llama3.2 Chat with Tools": {
         "name":"llama3.2",
         "embedding_name": "llama3.2",
         "chat": "True"   
