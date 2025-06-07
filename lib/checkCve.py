@@ -20,15 +20,18 @@ Loop over all Critical/High CVEs (use metrics:cvss3_1:baseSeverity)
 '''
 
 import os, re, json
+from langchain_chroma import Chroma
 from lib.repository import download_github_repo
 from lib.chain import create_qa_chain
 from dotenv import load_dotenv
 import requests
-from lib.chain import update_retriever
+from lib.chain import update_retriever, create_retriever
 from langchain_community.document_loaders.generic import GenericLoader
 from langchain_core.messages import HumanMessage
 from langchain_text_splitters import RecursiveJsonSplitter
 from langchain_core.documents import Document
+from lib.loader import load_files
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 cveURL = "https://github.com/CVEProject/cvelistV5.git"
 
@@ -173,34 +176,22 @@ def checkCveforProduct(cves, llm, retriever, prompts_text):
     print(f"Number of CVEs affecting the code {len(impactedCVEs)}")
     return impactedCVEs
 
-
-def checkCveforX(cves, llm, retriever, prompts_text):
-    cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
-    # Run 2
-
+# what is the cveId in the cveContext
 def cveChecker(cve_dir, cveid, db_dir, embeddings, llm, prompts_text):
+    # data is dict type
     data, products = loadCve(cve_dir, cveid)
     print(f"Products impacted:  {str(len(products))}")
-    #print(products)
     for product in products:
         print(f"Product: {product[1]}, BaseScore: {product[3]}")
     # Load Document
-    splitter = RecursiveJsonSplitter(max_chunk_size=300)
-    json_chunks = splitter.split_json(json_data=data)
-    texts = splitter.create_documents(texts=json_chunks)
-    count = 1
-    for text in texts:
-        print(text)
-        retriever = update_retriever(db_dir, [text], embeddings)
-        count += 1
-        if count > 3:
-            break
-    # Make a LangChain
-    qa_chain = create_qa_chain(llm, retriever, prompts_text, "initial_prompt")
+    vectorstore = Chroma(persist_directory=db_dir, embedding_function=embeddings, 
+                             collection_name="local-rag")
+    retriever = vectorstore.as_retriever()
+    qa_chain = create_qa_chain(llm, retriever, prompts_text, "chat_prompt", data)
     print("\nAsk a question.. 'exit' to quit...")
     while True:
         question = input("Question: ")
-        if question.lower() == "exit":
+        if question.lower() == "exit" or question.lower() == "quit" :
             break
         answer = qa_chain.invoke(question)
         Q1 = [HumanMessage(question)]
@@ -225,5 +216,4 @@ def cveLogic(cve_dir, llm, retriever, prompts_text, cveid, db_dir, embeddings):
     # Analyze the CVEs for Product with the RAG github
     impactedCVEs = checkCveforProduct(cves, llm, retriever, prompts_text)
     # Analyze the impacted CVEs
-    checkCveforX(impactedCVEs, llm, retriever, prompts_text)
 

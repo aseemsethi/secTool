@@ -4,7 +4,7 @@
 #
 import streamlit as st
 import argparse
-import os
+import os, shutil
 import re
 from dotenv import load_dotenv
 
@@ -23,6 +23,8 @@ from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
 
 # Tool Invocation
+#   Example of chat query - is the vulnerability mentioned in the CVE in cveContext 
+#                             found in the code in the context?
 #   Repo is picked from .env or paramter, and made into a RAG
 #   python main.py --repo_url https://github.com/aseemsethi/scraper.git
 # or 
@@ -30,6 +32,9 @@ from langchain_core.messages import HumanMessage
 #   python main.py --chat                (chst interface)
 #   python main.py --chat --CVE CVE-2025-5000 (this enabled a chat with repo and CVE input)
 #   python main.py                       (skips chat interface, and CVE tests are run)
+#   python main.py --clean                (add this in every run, so that the DB is recreated)
+#
+# Enter "quit" or "exit" in the Chat interface to quit.
 
 @tool
 def multiply(a: int, b: int) -> int:
@@ -119,6 +124,7 @@ def main():
     parser.add_argument("--CVE", type=str, help="CVE ID as CVE-xxxx", default="")
     # If action param is used, --chat is a flag and needs no value
     parser.add_argument("--chat", help="provides a chat interface", action="store_true")
+    parser.add_argument("--clean", help="deletes DB", action="store_true")
     args = parser.parse_args()
     print(f"Github URL : {args.repo_url}")
     repo_url = args.repo_url
@@ -139,8 +145,7 @@ def main():
         print (f"CVE ID: {cveid}")
         cve_pattern = re.compile(r'^CVE-\d{4}-\d{4,}$')
         if not cve_pattern.match(cveid.upper()):
-            parser.error("Invalid CVE format. Expected format: CVE-YYYY-NNNNN")
-
+            parser.error("Invalid CVE format. Expected format: CVE-YYYY-NNNNN")        
 
     # Prompt the user to select a model
     # Our models are locally behind ollama. Run ollama run <model>
@@ -156,6 +161,10 @@ def main():
     repo_dir = os.path.join(base_dir, "data", repo_name) 
     # /Users/aseemsethi/aseem/secTool/data/scraper
     db_dir = os.path.join(base_dir, "data", "db")
+    if args.clean:
+        if os.path.exists(db_dir) and os.path.isdir(db_dir):
+            shutil.rmtree(db_dir)
+            print(f"Deleted DB {db_dir}........................")
     cve_dir = os.path.join(base_dir, "data", "cve") 
     # /Users/aseemsethi/aseem/secTool/data/db
     print (repo_dir, db_dir, cve_dir)
@@ -173,7 +182,7 @@ def main():
 
     # Load prompt templates
     prompts_text = {
-        "initial_prompt": read_prompt(os.path.join(prompt_templates_dir, 'initial_prompt.txt')),
+        "chat_prompt": read_prompt(os.path.join(prompt_templates_dir, 'chat_prompt.txt')),
         "cve_prompt": read_prompt(os.path.join(prompt_templates_dir, 'cve_prompt.txt'))
     }
     
@@ -201,7 +210,7 @@ def main():
     if args.chat:
         print("Initiating Chat Interface")
         # Make a LangChain
-        qa_chain = create_qa_chain(llm, retriever, prompts_text, "initial_prompt")
+        qa_chain = create_qa_chain(llm, retriever, prompts_text, "chat_prompt", "")
         chatInterface(llm, qa_chain)
     else:
         # Execute CVE Logic

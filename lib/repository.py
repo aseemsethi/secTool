@@ -5,7 +5,6 @@ import shutil
 
 def download_github_repo(repo_url, destination_folder, forceDownload):
     #Check if repo exists
-    print("Download Github repo..")
     cmd = "clone"
     
     # Check if the repository already exists
