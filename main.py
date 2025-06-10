@@ -8,6 +8,7 @@ import os, shutil
 import re
 from dotenv import load_dotenv
 from lib.tools import tools, tool_functions
+from tests.llmTests import test_llm
 
 from langchain.globals import set_debug, set_verbose
 from lib.repository import download_github_repo
@@ -17,8 +18,6 @@ from lib.utils import read_prompt, load_LLM, select_model, load_embeddings
 from lib.models import MODELS_MAP
 from lib.checkCve import cveLogic
 
-from langchain.prompts import PromptTemplate  #test
-from langchain.chains.llm import LLMChain #test
 from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
 
@@ -161,13 +160,7 @@ def main():
     
     # Load LLM
     llm = load_LLM(model_name, tools)
-
-    # Run a test to see if everything working ok
-    # print(llm.invoke("Tell me a joke"))
-    # prompt = PromptTemplate.from_template("Give {number} names for a {domain} startup?")
-    # chain = LLMChain(llm=llm, prompt=prompt)
-    # print(chain.invoke({'number': 2, 'domain': 'Medical'}))
-    print("-----------------------")
+    # test_llm(llm)
 
     # Load Embeddings
     embeddings = load_embeddings(model_name)
