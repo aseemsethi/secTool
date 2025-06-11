@@ -2,12 +2,12 @@
 # Learnings from BellaBe github code
 # Using python 3.10.17
 #
-import streamlit as st
 import argparse
 import os, shutil
 import re
 from dotenv import load_dotenv
 from lib.tools import tools, tool_functions
+from lib.webui import webui_func
 from tests.llmTests import test_llm
 
 from langchain.globals import set_debug, set_verbose
@@ -22,39 +22,24 @@ from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
 
 # Tool Invocation
-#   Example of chat query - 
-#  is the vulnerability mentioned in the CVE in cveContext found in the code in the context?
-#  what is the product in the cve from cveContext
-#   Repo is picked from .env or paramter, and made into a RAG
-#   python main.py --repo_url https://github.com/aseemsethi/scraper.git
+#  Example of chat query - 
+#  Invoke: python main.py --CVE CVE-2024-22414 --clean
+#    is the vulnerability mentioned in the CVE in cveContext found in the code in the context?
+#    what is the product in the cve from cveContext
+#
+#  Repo is picked from .env or paramter, and made into a RAG
+#  Enter data in .env file - date from which CVEs need to be checked, repo URL etc.
+#   python main.py --repo_url https://github.com/aseemsethi/scraper.git   (for running in a loop)
 # or 
-#   Repo is picked from .env or paramter, and made into a RAG
+#  Use Chat interface to invole for a single CVE.
 #   python main.py --chat                (chst interface)
 #   python main.py --chat --CVE CVE-2025-5000 (this enabled a chat with repo and CVE input)
 #   python main.py                       (skips chat interface, and CVE tests are run)
 #   python main.py --clean                (add this in every run, so that the DB is recreated)
 #
-# Enter "quit" or "exit" in the Chat interface to quit.
-
+#  Enter "quit" or "exit" in the Chat interface to quit.
 
 set_verbose(True)
-
-@st.fragment(run_every=None)
-def webui_func(qa_chain):
-    st.write("This is inside of a fragment!")
-    st.title("CVE Check")
-    # Initialize chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    st.caption("A Streamlit powered chatbot powered by Ollama")
-    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
-    for msg in st.session_state.messages:
-        st.chat_message(msg["role"]).write(msg["content"])
-    if prompt := st.chat_input("What is the code written in"):
-        print("..............")
-        answer = qa_chain.invoke(prompt)
-        #print(f"Answer: {answer}")
-        st.chat_message("assistant").write(answer)
 
 def chatInterface(llm, qa_chain):
     print("\nAsk a question.. 'exit' to quit...")
@@ -168,9 +153,6 @@ def main():
 
     # Create Retriever - this makes a DB sqlite and puts all data there
     retriever = create_retriever(db_dir, document_chunks, embeddings)
-
-    # The following call was to test Streamlit UI
-    #webui_func(qa_chain)
 
     # Chat Function Interface
     if args.chat:

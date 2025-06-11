@@ -179,7 +179,7 @@ def checkCveforProduct(cves, llm, retriever, prompts_text):
 # what is the cveId in the cveContext
 def cveChecker(cve_dir, cveid, db_dir, embeddings, llm, prompts_text):
     # data is dict type
-    data, products = loadCve(cve_dir, cveid)
+    cveFile, products = loadCve(cve_dir, cveid)
     print(f"Products impacted:  {str(len(products))}")
     for product in products:
         print(f"Product: {product[1]}, BaseScore: {product[3]}")
@@ -187,7 +187,7 @@ def cveChecker(cve_dir, cveid, db_dir, embeddings, llm, prompts_text):
     vectorstore = Chroma(persist_directory=db_dir, embedding_function=embeddings, 
                              collection_name="local-rag")
     retriever = vectorstore.as_retriever()
-    qa_chain = create_qa_chain(llm, retriever, prompts_text, "chat_prompt", data)
+    qa_chain = create_qa_chain(llm, retriever, prompts_text, "chat_prompt", cveFile)
     print("\nAsk a question.. 'exit' to quit...")
     while True:
         question = input("Question: ")
