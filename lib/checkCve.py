@@ -156,7 +156,7 @@ def loadCve(cve_dir, cveid):
 
 
 def checkCveforProduct(cves, llm, retriever, prompts_text):
-    cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt")
+    cveqa_chain = create_qa_chain(llm, retriever, prompts_text, "cve_prompt", 0)
 
     # This is the 1st run of questions to get a draft list of Impacted CVEs
     impactedCVEs = []

@@ -21,11 +21,14 @@ from lib.checkCve import cveLogic
 from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
 
-# Tool Invocation
-#  Example of chat query - 
-#  Invoke: python main.py --CVE CVE-2024-22414 --clean
+# Tool Invocation demo
+#  Chat query - python main.py --CVE CVE-2024-22414 --clean
+#    what is the CVE from the cvecontext
 #    is the vulnerability mentioned in the CVE in cveContext found in the code in the context?
 #    what is the product in the cve from cveContext
+#  Tool Calling: python main.py --CVE CVE-2024-22414 --clean --chat
+#     what is 2 times 10
+#  Loop run: python main.py  --clean
 #
 #  Repo is picked from .env or paramter, and made into a RAG
 #  Enter data in .env file - date from which CVEs need to be checked, repo URL etc.

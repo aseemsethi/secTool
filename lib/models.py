@@ -23,5 +23,14 @@ MODELS_MAP = {
         "embedding_name": "llama3.2",
         "api_key": os.getenv("OPENAI_API_KEY"),
         "chat": "False"   
+    },
+    "qwen2-math:latest": {
+        "name":"qwen2-math:latest",
+        "embedding_name": "llama3.2",
+        "api_key": os.getenv("OPENAI_API_KEY"),
+        "chat": "False"   
     }
+    
+
+
 }
